@@ -2,11 +2,21 @@ package main
 
 import (
 	"bytes"
-	"flag"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
+
+	"github.com/jessevdk/go-flags"
 )
+
+//Options ...
+type Options struct {
+	//IpAddress ...
+	IpAddress string `short:"a" long:"ipaddress" default:"" description:"Ip Address"`
+	//Port ...
+	Port *int `short:"p" default:"3000" description:"Tcp port"`
+}
 
 // App ...
 type App struct {
@@ -41,13 +51,18 @@ func (h *App) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	numbPtr := flag.Int("p", 3000, "tcp port for listening")
-	fmt.Println("listening on port:", *numbPtr)
+	var opts Options
+	_, err := flags.ParseArgs(&opts, os.Args)
+
+	if err != nil {
+		os.Exit(1)
+	}
+
 	var buffer bytes.Buffer
+	buffer.WriteString(opts.IpAddress)
 	buffer.WriteString(":")
-	buffer.WriteString(String(int64(*numbPtr)))
-	flag.Parse()
+	buffer.WriteString(String(int64(*opts.Port)))
 	server := &App{}
-	fmt.Println(buffer.String())
+	fmt.Println("listening on ", buffer.String())
 	http.ListenAndServe(buffer.String(), server)
 }
